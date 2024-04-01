@@ -26,7 +26,7 @@
 //! ```plain
 //! Cargo.toml
 //! src/
-//!   [..]
+//!   [...]
 //!   tests/
 //!     expected/
 //!       test_case_a.png
