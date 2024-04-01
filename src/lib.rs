@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 mod egui_skia;
-mod painter;
 
 use crate::egui_skia::EguiSkia;
 use egui::Pos2;

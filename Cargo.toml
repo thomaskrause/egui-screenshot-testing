@@ -1,7 +1,7 @@
 [package]
+name = "egui-screenshot-testing"
 authors = ["Thomas Krause <thomaskrause@posteo.de>"]
 description = "Helper functions to test egui applications using screenshots and comparing them to a snapshot version."
-name = "egui-screenshot-testing"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"

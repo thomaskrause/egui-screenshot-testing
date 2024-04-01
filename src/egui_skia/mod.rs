@@ -1,7 +1,9 @@
+pub(crate) mod painter;
+
 use egui::Context;
 use skia_safe::Canvas;
 
-use crate::painter::Painter;
+use crate::egui_skia::painter::Painter;
 
 pub struct RasterizeOptions {
     pub pixels_per_point: f32,
