@@ -7,11 +7,11 @@
 //!
 //! ```
 //! use egui_screenshot_testing::TestBackend;
-//! 
+//!
 //! let mut backend = TestBackend::new("src/tests/expected", "src/tests/actual", |_ctx| {
 //!     // You could do any initialization here.
 //! });
-//! backend.assert_screenshot_after_n_frames("test_case_a.png", (150, 100), 5, 
+//! backend.assert_screenshot_after_n_frames("test_case_a.png", (150, 100), 5,
 //!     move |ctx| {
 //!         // Add any egui elements
 //!         egui::CentralPanel::default().show(ctx, |ui| {
@@ -19,9 +19,9 @@
 //!        });
 //!    });
 //! ```
-//! 
-//! 
-//! The screenshots are compared to an image file that is stored in a given directory (relative to the manifest file of your package).
+//!
+//!
+//! The screenshots are compared to an image file that is stored in a given directory.
 //!
 //! ```plain
 //! Cargo.toml
@@ -37,7 +37,11 @@
 //! On failure, the generated screenshot is written to a folder that contains
 //! all actual screenshots. You can compare the images by hand or with an image
 //! diff tool (eg. the ImageMagick `compare` tool) and decide whether you want
-//! to update the snapshot by copying the file to the expected folder.
+//! to update the snapshot by copying the file to the expected folder. If you
+//! set the environment variable `EGUI_SCREENSHOT_REPLACE`, all expected files
+//! will be replaced with the actual ones without failing the tests. This is
+//! e.g. useful when creating an initial set of tests where no snapshot exists
+//! yet.
 //!
 use std::path::PathBuf;
 
@@ -60,10 +64,9 @@ impl TestBackend {
     /// Create a new test backend.
     ///
     /// * `expected_dir` - Directory in which the images files to compare
-    ///   against are located. This must be relative to the directory containing
-    ///   the manifest of your package.
+    ///   against are located.
     /// * `actual_dir` - If a test fails, the actual image should be written do
-    ///   this directory. This is relative to the directory containing the manifest of your package, too.
+    ///   this directory.
     /// * `init_app_with_context` - A closure that will be executed once to init
     ///   the application.
     pub fn new(
@@ -80,18 +83,17 @@ impl TestBackend {
         }
     }
 
-    fn assert_eq_screenshot(&self, expected_file_name: &str, surface: &mut Surface) {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-
-        let mut output_file_rel = self.expected_dir.clone();
-        output_file_rel.push(expected_file_name);
-        let output_file = manifest_dir.join(&output_file_rel);
+    fn assert_eq_screenshot(
+        &self,
+        expected_file_name: &str,
+        surface: &mut Surface,
+        replace_if_not_equal: bool,
+    ) {
+        let output_file = self.expected_dir.join(expected_file_name);
 
         // Write out the screenshot to a file that is removed if test ist successful
-        let mut actual_file_rel = self.actual_dir.clone();
-        actual_file_rel.push(expected_file_name);
+        let actual_file = self.actual_dir.join(expected_file_name);
 
-        let actual_file = manifest_dir.join(&actual_file_rel);
         std::fs::create_dir_all(&actual_file.parent().unwrap()).unwrap();
 
         let actual_image_skia = surface.image_snapshot();
@@ -100,16 +102,21 @@ impl TestBackend {
             .unwrap();
         std::fs::write(&actual_file, skia_data.as_bytes()).unwrap();
 
-        if std::env::var("UPDATE_EXPECT").is_ok() {
+        if replace_if_not_equal {
             // Write current snapshot to to expected path
             let data = actual_image_skia
                 .encode(None, skia_safe::EncodedImageFormat::PNG, 100)
                 .unwrap();
+            std::fs::create_dir_all(&output_file.parent().unwrap()).unwrap();
             std::fs::write(&output_file, data.as_bytes()).unwrap();
         }
 
         // Read in expected image from file
-        assert!(output_file.is_file(), "Snapshot file {:#?} does not exist.", output_file);
+        assert!(
+            output_file.is_file(),
+            "Snapshot file {:#?} does not exist.",
+            output_file
+        );
         let expected_image = image::io::Reader::open(&output_file)
             .unwrap()
             .with_guessed_format()
@@ -132,8 +139,8 @@ impl TestBackend {
         assert!(
             dist == 0,
             "{} != {}",
-            actual_file_rel.to_string_lossy(),
-            output_file_rel.to_string_lossy(),
+            actual_file.to_string_lossy(),
+            output_file.to_string_lossy(),
         );
 
         // Remove the created file
@@ -176,28 +183,64 @@ impl TestBackend {
         }
 
         self.backend.paint(surface.canvas());
-        self.assert_eq_screenshot(expected_file_name, &mut surface);
+        let replace_if_not_equal = std::env::var("EGUI_SCREENSHOT_REPLACE").is_ok();
+        self.assert_eq_screenshot(expected_file_name, &mut surface, replace_if_not_equal);
     }
 }
 
 #[cfg(test)]
 mod tests {
 
+    use tempfile::tempdir;
+
     use super::*;
 
     #[test]
     #[should_panic]
     fn non_existing_snapshot_fails() {
-        let mut backend = TestBackend::new("src/tests/expected", "src/tests/actual", |_ctx| {
-            // You could do any initialization here.
+        let out_dir = tempdir().unwrap();
+
+        temp_env::with_var_unset("EGUI_SCREENSHOT_REPLACE", || {
+            let mut backend = TestBackend::new(
+                "src/tests/expected",
+                out_dir.path().join("actual"),
+                |_ctx| {},
+            );
+            backend.assert_screenshot_after_n_frames(
+                "should_not_exist.png",
+                (150, 100),
+                5,
+                move |ctx| {
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        ui.heading("Hello World");
+                    });
+                },
+            );
         });
-        backend.assert_screenshot_after_n_frames("should_not_exist.png", (150, 100),
-            5, 
-            move |ctx| {
-                egui::CentralPanel::default().show(ctx, |ui| {
-                    ui.heading("Hello World");
-           });
-       });
-    
+    }
+
+    #[test]
+    fn replace_env_variable() {
+        let out_dir = tempdir().unwrap();
+
+        let expected = out_dir.path().join("expected");
+        let actual = out_dir.path().join("actual");
+
+        temp_env::with_var("EGUI_SCREENSHOT_REPLACE", Some("1"), || {
+            let mut backend = TestBackend::new(&expected, &actual, |_ctx| {});
+            backend.assert_screenshot_after_n_frames(
+                "will_be_created_by_env.png",
+                (150, 100),
+                5,
+                move |ctx| {
+                    egui::CentralPanel::default().show(ctx, |ui| {
+                        ui.heading("Hello World");
+                    });
+                },
+            );
+        });
+
+        assert_eq!(true, expected.join("will_be_created_by_env.png").is_file());
+        assert_eq!(false, actual.join("will_be_created_by_env.png").exists());
     }
 }
