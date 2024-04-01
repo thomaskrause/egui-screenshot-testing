@@ -1,0 +1,14 @@
+[package]
+authors = ["Thomas Krause <thomaskrause@posteo.de>"]
+description = "Helper functions to test egui applications using screenshots and comparing them to a snapshot version."
+name = "egui-screenshot-testing"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+eframe = ">=0.27.1"
+egui = ">=0.27.1"
+image = "0.24.5"
+skia-safe = "0.72.0"
+visual-hash = "3"
