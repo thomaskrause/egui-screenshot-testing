@@ -5,7 +5,7 @@ mod painter;
 
 use egui::{CentralPanel, Pos2, Ui};
 use crate::egui_skia::EguiSkia;
-use skia_safe::Surface;
+use skia_safe::{surfaces, Surface};
 use visual_hash::HasherConfig;
 
 
@@ -44,15 +44,13 @@ fn assert_eq_screenshot(&self, expected_file_name: &str, surface: &mut Surface) 
     std::fs::create_dir_all(&actual_file.parent().unwrap()).unwrap();
 
     let actual_image_skia = surface.image_snapshot();
-    let skia_data = actual_image_skia
-        .encode_to_data(skia_safe::EncodedImageFormat::PNG)
+    let skia_data = actual_image_skia.encode(None, skia_safe::EncodedImageFormat::PNG, 100)
         .unwrap();
     std::fs::write(&actual_file, skia_data.as_bytes()).unwrap();
 
     if std::env::var("UPDATE_EXPECT").is_ok() {
         // Write current snapshot to to expected path
-        let data = actual_image_skia
-            .encode_to_data(skia_safe::EncodedImageFormat::PNG)
+        let data = actual_image_skia.encode(None, skia_safe::EncodedImageFormat::PNG, 100)
             .unwrap();
         std::fs::write(&output_file, data.as_bytes()).unwrap();
     }
@@ -96,8 +94,7 @@ fn assert_eq_screenshot(&self, expected_file_name: &str, surface: &mut Surface) 
         add_contents: impl Fn(&mut Ui),
     ) {
 
-        let mut surface =
-            Surface::new_raster_n32_premul(window_size).expect("Failed to create surface");
+        let mut surface = surfaces::raster_n32_premul(window_size).expect("Failed to create surface");
         let input = egui::RawInput {
             screen_rect: Some(
                 [
