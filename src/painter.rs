@@ -8,8 +8,8 @@ use egui::epaint::Primitive;
 use egui::{ClippedPrimitive, ImageData, Pos2, TextureId, TexturesDelta};
 use skia_safe::vertices::VertexMode;
 use skia_safe::{
-    scalar, BlendMode, Canvas, ClipOp, Color, ConditionallySend, Data, Drawable, Image, ImageInfo,
-    Paint, PictureRecorder, Point, Rect, Sendable, Vertices, images, surfaces,
+    images, scalar, surfaces, BlendMode, Canvas, ClipOp, Color, Data, Drawable, Image, ImageInfo,
+    Paint, Point, Rect, Sendable, Vertices,
 };
 
 #[derive(Eq, PartialEq)]
@@ -367,24 +367,6 @@ impl Default for Painter {
 
 pub struct EguiSkiaPaintCallback {
     callback: Box<dyn Fn(Rect) -> SyncSendableDrawable + Send + Sync>,
-}
-
-impl EguiSkiaPaintCallback {
-    pub fn new<F: Fn(&Canvas) + Send + Sync + 'static>(callback: F) -> EguiSkiaPaintCallback {
-        EguiSkiaPaintCallback {
-            callback: Box::new(move |rect| {
-                let mut pr = PictureRecorder::new();
-                let canvas = pr.begin_recording(rect, None);
-                callback(canvas);
-                SyncSendableDrawable(
-                    pr.finish_recording_as_drawable()
-                        .unwrap()
-                        .wrap_send()
-                        .unwrap(),
-                )
-            }),
-        }
-    }
 }
 
 struct SyncSendableDrawable(pub Sendable<Drawable>);

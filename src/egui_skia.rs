@@ -1,5 +1,5 @@
-use egui::{Context, Pos2};
-use skia_safe::{Canvas, Surface, surfaces};
+use egui::Context;
+use skia_safe::Canvas;
 
 use crate::painter::Painter;
 
@@ -18,45 +18,6 @@ impl Default for RasterizeOptions {
         }
     }
 }
-
-pub fn rasterize(
-    size: (i32, i32),
-    ui: impl FnMut(&Context),
-    options: Option<RasterizeOptions>,
-) -> Surface {
-    let mut surface = surfaces::raster_n32_premul(size).expect("Failed to create surface");
-    draw_onto_surface(&mut surface, ui, options);
-    surface
-}
-
-pub fn draw_onto_surface(
-    surface: &mut Surface,
-    mut ui: impl FnMut(&Context),
-    options: Option<RasterizeOptions>,
-) {
-    let RasterizeOptions {
-        pixels_per_point,
-        frames_before_screenshot,
-    } = options.unwrap_or_default();
-    let mut backend = EguiSkia::new(pixels_per_point);
-
-    let input = egui::RawInput {
-        screen_rect: Some(
-            [
-                Pos2::default(),
-                Pos2::new(surface.width() as f32, surface.height() as f32),
-            ]
-            .into(),
-        ),
-        ..Default::default()
-    };
-
-    for _ in 0..frames_before_screenshot {
-        backend.run(input.clone(), &mut ui);
-    }
-    backend.paint(surface.canvas());
-}
-
 /// Convenience wrapper for using [`egui`] from a [`skia`] app.
 pub struct EguiSkia {
     pub egui_ctx: Context,
@@ -75,7 +36,7 @@ impl EguiSkia {
             painter,
             shapes: Default::default(),
             textures_delta: Default::default(),
-            pixels_per_point
+            pixels_per_point,
         }
     }
 
@@ -93,7 +54,7 @@ impl EguiSkia {
             shapes,
             pixels_per_point: _,
             // TODO: How to handle multiple outputs
-            viewport_output: _
+            viewport_output: _,
         } = self.egui_ctx.run(input, run_ui);
 
         self.shapes = shapes;

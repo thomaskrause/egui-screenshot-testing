@@ -3,11 +3,7 @@ use egui::Label;
 use super::*;
 
 #[derive(Default)]
-struct EmptyApp {
-
-}
-
-
+struct EmptyApp {}
 
 #[test]
 fn hello_world() {
