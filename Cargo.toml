@@ -5,6 +5,9 @@ name = "egui-screenshot-testing"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["cpu_fix"]
+cpu_fix = []
 
 [dependencies]
 eframe = ">=0.27.1"
