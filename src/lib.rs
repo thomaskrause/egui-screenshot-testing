@@ -12,7 +12,7 @@ use visual_hash::HasherConfig;
 
 static INIT: Once = Once::new();
 
-struct TestBackend {
+pub struct TestBackend {
     backend: EguiSkia,
     expected_dir: PathBuf,
     actual_dir: PathBuf,
