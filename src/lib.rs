@@ -1,14 +1,12 @@
-use std::{path::PathBuf, sync::Once};
+use std::path::PathBuf;
 
 mod egui_skia;
 mod painter;
 
 use crate::egui_skia::EguiSkia;
-use egui::{CentralPanel, Pos2, Ui};
+use egui::Pos2;
 use skia_safe::{surfaces, Surface};
 use visual_hash::HasherConfig;
-
-static INIT: Once = Once::new();
 
 pub struct TestBackend {
     backend: EguiSkia,
@@ -22,7 +20,6 @@ impl TestBackend {
         actual_dir: impl Into<PathBuf>,
         init_app_with_context: impl FnOnce(&egui::Context),
     ) -> Self {
-        INIT.call_once(|| std::env::set_var("TZ", "CET"));
         let backend = EguiSkia::default();
         init_app_with_context(&backend.egui_ctx);
         TestBackend {
@@ -96,7 +93,7 @@ impl TestBackend {
         expected_file_name: &str,
         window_size: (i32, i32),
         n: usize,
-        add_contents: impl Fn(&mut Ui),
+        mut ui: impl FnMut(&egui::Context),
     ) {
         let mut surface =
             surfaces::raster_n32_premul(window_size).expect("Failed to create surface");
@@ -112,14 +109,10 @@ impl TestBackend {
         };
 
         for _ in 0..n {
-            self.backend.run(input.clone(), |ctx| {
-                CentralPanel::default().show(ctx, &add_contents);
-            });
+            self.backend.run(input.clone(), &mut ui);
         }
 
         self.backend.paint(surface.canvas());
         self.assert_eq_screenshot(expected_file_name, &mut surface);
     }
 }
-#[cfg(test)]
-mod tests;
