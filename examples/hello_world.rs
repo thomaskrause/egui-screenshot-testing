@@ -1,5 +1,7 @@
 use egui::{Label, Visuals, Widget};
 
+/// A simple app that can be configured to use the light theme and has a counter
+/// state.
 #[derive(Default)]
 struct HelloApp {
     light_theme: bool,
@@ -7,6 +9,7 @@ struct HelloApp {
 }
 
 impl HelloApp {
+    /// Function that can be called once to init the application.
     fn init(&self, ctx: &egui::Context) {
         if self.light_theme {
             ctx.set_visuals(Visuals::light());
@@ -40,6 +43,7 @@ impl eframe::App for HelloApp {
     }
 }
 
+/// Run the example app using eframe.
 fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size([150.0, 100.0]),
@@ -51,6 +55,8 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(|ctx| {
             let app = HelloApp::default();
+            // Make sure to call the init function so it behaves the same in the
+            // real application and in the tests.
             app.init(&ctx.egui_ctx);
             Box::new(app)
         }),

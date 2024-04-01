@@ -1,5 +1,12 @@
 # egui-screenshot-testing
 
+[![Documentation](https://docs.rs/egui-screenshot-testing/badge.svg)](https://docs.rs/egui-screenshot-testing)
+
+Helper functions to test [egui](https://github.com/emilk/egui/) applications
+using screenshots and comparing them to a saved version. See the `examples/`
+folder in the git repo for a usage example.
+
+
 ## 3rd party dependencies
 
 This software depends on several 3rd party projects. In particular, it bundles
