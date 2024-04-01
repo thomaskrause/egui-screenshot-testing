@@ -10,7 +10,6 @@ default = ["cpu_fix"]
 cpu_fix = []
 
 [dependencies]
-eframe = ">=0.27.1"
 egui = ">=0.27.1"
 image = "0.24.5"
 skia-safe = "0.72.0"
