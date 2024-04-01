@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use egui 0.26.0 as minimal version
+
 ## [0.1.0] - 2024-04-01
 
 Initial release
