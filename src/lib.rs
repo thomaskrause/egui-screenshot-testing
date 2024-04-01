@@ -94,7 +94,7 @@ impl TestBackend {
         // Write out the screenshot to a file that is removed if test ist successful
         let actual_file = self.actual_dir.join(expected_file_name);
 
-        std::fs::create_dir_all(&actual_file.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(actual_file.parent().unwrap()).unwrap();
 
         let actual_image_skia = surface.image_snapshot();
         let skia_data = actual_image_skia
@@ -107,7 +107,7 @@ impl TestBackend {
             let data = actual_image_skia
                 .encode(None, skia_safe::EncodedImageFormat::PNG, 100)
                 .unwrap();
-            std::fs::create_dir_all(&output_file.parent().unwrap()).unwrap();
+            std::fs::create_dir_all(output_file.parent().unwrap()).unwrap();
             std::fs::write(&output_file, data.as_bytes()).unwrap();
         }
 

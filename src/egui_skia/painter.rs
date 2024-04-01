@@ -93,8 +93,8 @@ impl Painter {
                     let old_image = self.paints.remove(id).unwrap().image;
 
                     let mut surface = surfaces::raster_n32_premul(skia_safe::ISize::new(
-                        old_image.width() as i32,
-                        old_image.height() as i32,
+                        old_image.width(),
+                        old_image.height(),
                     ))
                     .unwrap();
 
@@ -251,13 +251,7 @@ impl Painter {
                             &pos,
                             &texs,
                             &colors,
-                            Some(
-                                mesh.indices
-                                    .iter()
-                                    .map(|index| *index as u16)
-                                    .collect::<Vec<u16>>()
-                                    .as_slice(),
-                            ),
+                            Some(mesh.indices.as_slice()),
                         );
 
                         arc.clip_rect(skclip_rect, ClipOp::default(), true);
@@ -305,12 +299,12 @@ impl Painter {
 
                     let mut drawable: Drawable = callback.callback.deref()(skia_rect).0.unwrap();
 
-                    let mut arc = skia_safe::AutoCanvasRestore::guard(canvas, true);
+                    let arc = skia_safe::AutoCanvasRestore::guard(canvas, true);
 
                     arc.clip_rect(skclip_rect, ClipOp::default(), true);
                     arc.translate((rect.min.x, rect.min.y));
 
-                    drawable.draw(&mut arc, None);
+                    drawable.draw(&arc, None);
                 }
             }
         }
@@ -351,7 +345,7 @@ impl Painter {
                 is_zero = Some(is_current_zero)
             }
             let last = meshes.last_mut().unwrap();
-            last.vertices.push(vertex.clone());
+            last.vertices.push(*vertex);
             last.indices.push(last.indices.len() as u16);
         }
 
