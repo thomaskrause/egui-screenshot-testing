@@ -11,6 +11,6 @@ cpu_fix = []
 
 [dependencies]
 egui = ">=0.27.1"
-image = "0.24.5"
+image = "0.24.9"
 skia-safe = "0.72.0"
 visual-hash = "3"
