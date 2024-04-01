@@ -4,7 +4,9 @@
 
 Helper functions to test [egui](https://github.com/emilk/egui/) applications
 using screenshots and comparing them to a saved version. See the `examples/`
-folder in the git repo for a usage example.
+folder in the git repo for a usage example and the [documentation on
+docs.rs](https://docs.rs/egui-screenshot-testing) for more information about
+this crate.
 
 
 ## 3rd party dependencies
