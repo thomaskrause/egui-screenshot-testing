@@ -1,3 +1,44 @@
+//! Helper functions to test [egui](https://github.com/emilk/egui/) applications
+//! using screenshots and comparing them to a saved version.
+//!
+//! The idea is to take an application state and render it using the
+//! [TestBackend]. Then, you can compare a saved screenshot an compare that the
+//! generated visuals are the same.
+//!
+//! ```
+//! use egui_screenshot_testing::TestBackend;
+//! 
+//! let mut backend = TestBackend::new("src/tests/expected", "src/tests/actual", |_ctx| {
+//!     // You could do any initialization here.
+//! });
+//! backend.assert_screenshot_after_n_frames("test_case_a.png", (150, 100), 5, 
+//!     move |ctx| {
+//!         // Add any egui elements
+//!         egui::CentralPanel::default().show(ctx, |ui| {
+//!             ui.heading("Hello World");
+//!        });
+//!    });
+//! ```
+//! 
+//! 
+//! The screenshots are compared to an image file that is stored in a given directory (relative to the manifest file of your package).
+//!
+//! ```plain
+//! Cargo.toml
+//! src/
+//!   [..]
+//!   tests/
+//!     expected/
+//!       test_case_a.png
+//!       test_case_b.png
+//!       [...]
+//! ```
+//!
+//! On failure, the generated screenshot is written to a folder that contains
+//! all actual screenshots. You can compare the images by hand or with an image
+//! diff tool (eg. the ImageMagick `compare` tool) and decide whether you want
+//! to update the snapshot by copying the file to the expected folder.
+//!
 use std::path::PathBuf;
 
 mod egui_skia;
@@ -13,7 +54,18 @@ pub struct TestBackend {
     actual_dir: PathBuf,
 }
 
+/// A backend based on [egui_skia](https://github.com/lucasmerlin/egui_skia)
+/// that renders the application and creates a screenshot.
 impl TestBackend {
+    /// Create a new test backend.
+    ///
+    /// * `expected_dir` - Directory in which the images files to compare
+    ///   against are located. This must be relative to the directory containing
+    ///   the manifest of your package.
+    /// * `actual_dir` - If a test fails, the actual image should be written do
+    ///   this directory. This is relative to the directory containing the manifest of your package, too.
+    /// * `init_app_with_context` - A closure that will be executed once to init
+    ///   the application.
     pub fn new(
         expected_dir: impl Into<PathBuf>,
         actual_dir: impl Into<PathBuf>,
@@ -57,6 +109,7 @@ impl TestBackend {
         }
 
         // Read in expected image from file
+        assert!(output_file.is_file(), "Snapshot file {:#?} does not exist.", output_file);
         let expected_image = image::io::Reader::open(&output_file)
             .unwrap()
             .with_guessed_format()
@@ -87,15 +140,26 @@ impl TestBackend {
         std::fs::remove_file(actual_file).unwrap();
     }
 
+    /// Assert that the rendered view is the same after a given number of rendered frames.
+    ///
+    /// * `expected_file_name` - The file name of the snapshot.
+    /// * `output_size` - The dimensions of the screenshot.
+    /// * `n` - Number of times the frame should be rendered before the screenshot is compared. If you use animations or other effects, this helps to render the final version.
+    /// * `ui` - Closure that creates the user interface.
+    ///
+    /// # Panics
+    ///
+    /// Similar to the inbuilt `assert_` macros, this will panic if the actual and expected screenshots are not the same.
+    /// It also panics if the given snapshot file to compare against does not exist.
     pub fn assert_screenshot_after_n_frames(
         &mut self,
         expected_file_name: &str,
-        window_size: (i32, i32),
+        output_size: (i32, i32),
         n: usize,
         mut ui: impl FnMut(&egui::Context),
     ) {
         let mut surface =
-            surfaces::raster_n32_premul(window_size).expect("Failed to create surface");
+            surfaces::raster_n32_premul(output_size).expect("Failed to create surface");
         let input = egui::RawInput {
             screen_rect: Some(
                 [
@@ -113,5 +177,27 @@ impl TestBackend {
 
         self.backend.paint(surface.canvas());
         self.assert_eq_screenshot(expected_file_name, &mut surface);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    #[should_panic]
+    fn non_existing_snapshot_fails() {
+        let mut backend = TestBackend::new("src/tests/expected", "src/tests/actual", |_ctx| {
+            // You could do any initialization here.
+        });
+        backend.assert_screenshot_after_n_frames("should_not_exist.png", (150, 100),
+            5, 
+            move |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.heading("Hello World");
+           });
+       });
+    
     }
 }
