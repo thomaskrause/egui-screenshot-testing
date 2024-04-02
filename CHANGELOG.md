@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Add `doc-scrape-examples = true` to Cargo.toml so that docs.rs can compile the
+  documentation.
+
 ## [0.2.0] - 2024-04-01
 
 ### Changed
