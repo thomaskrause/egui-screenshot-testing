@@ -1,48 +1,6 @@
 //! Helper functions to test [egui](https://github.com/emilk/egui/) applications
 //! using screenshots and comparing them to a saved version.
 //!
-//! The idea is to take an application state and render it using the
-//! [TestBackend]. Then, you can compare a saved screenshot an compare that the
-//! generated visuals are the same.
-//!
-//! ```
-//! use egui_screenshot_testing::TestBackend;
-//!
-//! let mut backend = TestBackend::new("src/tests/expected", "src/tests/actual", |_ctx| {
-//!     // You could do any initialization here.
-//! });
-//! backend.assert_screenshot_after_n_frames("test_case_a.png", (150, 100), 5,
-//!     move |ctx| {
-//!         // Add any egui elements
-//!         egui::CentralPanel::default().show(ctx, |ui| {
-//!             ui.heading("Hello World");
-//!        });
-//!    });
-//! ```
-//!
-//!
-//! The screenshots are compared to an image file that is stored in a given directory.
-//!
-//! ```plain
-//! Cargo.toml
-//! src/
-//!   [...]
-//!   tests/
-//!     expected/
-//!       test_case_a.png
-//!       test_case_b.png
-//!       [...]
-//! ```
-//!
-//! On failure, the generated screenshot is written to a folder that contains
-//! all actual screenshots. You can compare the images by hand or with an image
-//! diff tool (eg. the ImageMagick `compare` tool) and decide whether you want
-//! to update the snapshot by copying the file to the expected folder. If you
-//! set the environment variable `EGUI_SCREENSHOT_REPLACE`, all expected files
-//! will be replaced with the actual ones without failing the tests. This is
-//! e.g. useful when creating an initial set of tests where no snapshot exists
-//! yet.
-//!
 use std::path::PathBuf;
 
 mod egui_skia;
@@ -194,6 +152,19 @@ mod tests {
     use tempfile::tempdir;
 
     use super::*;
+
+    #[test]
+    fn readme_example() {
+        let mut backend = TestBackend::new("src/tests/expected", "src/tests/actual", |_ctx| {
+            // You could do any initialization here.
+        });
+        backend.assert_screenshot_after_n_frames("test_case_a.png", (150, 100), 5, move |ctx| {
+            // Add any egui elements
+            egui::CentralPanel::default().show(ctx, |ui| {
+                ui.heading("Hello World");
+            });
+        });
+    }
 
     #[test]
     #[should_panic]

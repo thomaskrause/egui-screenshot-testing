@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Do not link to non-working docs.rs documentation. This is causes by the
+  rust-skia dependency: <https://github.com/rust-skia/rust-skia/issues/720>
+
 ## [0.3.0] - 2024-04-02
 
 ### Fixed
