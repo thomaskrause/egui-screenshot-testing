@@ -1,3 +1,8 @@
+This was developed before egui hat its own UI testing library [egui_kittest](https://crates.io/crates/egui_kittest) integrated. 
+There is no benefit of using this library over egui_kittest (on the contrary, egui_kittest has much more features and allows simulate UI interaction) so it has been archived.
+
+---
+
 # egui-screenshot-testing
 
 
